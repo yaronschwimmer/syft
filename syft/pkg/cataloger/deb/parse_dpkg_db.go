@@ -10,6 +10,7 @@ import (
 
 	"github.com/dustin/go-humanize"
 	"github.com/mitchellh/mapstructure"
+	"golang.org/x/exp/slices"
 
 	"github.com/anchore/syft/internal"
 	"github.com/anchore/syft/internal/log"
@@ -24,11 +25,19 @@ var (
 	sourceRegexp     = regexp.MustCompile(`(?P<name>\S+)( \((?P<version>.*)\))?`)
 )
 
+// func parseDebPackages(resolver source.FileResolver, env *generic.Environment, reader source.LocationReadCloser) ([]pkg.Package, []artifact.Relationship, error) {
+// 	if reader.Location.VirtualPath == "/var/lib/dpkg/status" {
+
+// 	}
+// }
+
 func parseDpkgDB(resolver source.FileResolver, env *generic.Environment, reader source.LocationReadCloser) ([]pkg.Package, []artifact.Relationship, error) {
 	metadata, err := parseDpkgStatus(reader)
 	if err != nil {
 		return nil, nil, fmt.Errorf("unable to catalog dpkg DB=%q: %w", reader.RealPath, err)
 	}
+
+	indirectDependencies := parseExtendedStatus(resolver)
 
 	var pkgs []pkg.Package
 	nameToPackage := make(map[string]pkg.Package)
@@ -56,9 +65,50 @@ func parseDpkgDB(resolver source.FileResolver, env *generic.Environment, reader 
 			}
 			relationships = append(relationships, relationship)
 		}
+		m.IsIndirectDependency = slices.Contains(indirectDependencies, m.Package)
+		pkgs = append(pkgs, newDpkgPackage(m, reader.Location, resolver, env.LinuxRelease))
 	}
 
 	return pkgs, relationships, nil
+}
+
+func parseExtendedStatus(resolver source.FileResolver) []string {
+	locations, err := resolver.FilesByPath(pkg.ExtendedStatusGlob)
+	if err != nil {
+		return nil // TODO: handle error
+	}
+
+	for _, location := range locations {
+		contentReader, err := resolver.FileContentsByLocation(location)
+		if err != nil {
+			// TODO: handle error
+			continue
+		}
+
+		content, err := io.ReadAll(contentReader)
+		internal.CloseAndLogError(contentReader, location.VirtualPath)
+		if err != nil {
+			// TODO: handle error
+			continue
+		}
+
+		splitted := strings.Split(string(content), "\n\n")
+		autoInstalledPackages := make([]string, 0)
+
+		//Package: libssh-4
+		for _, packageInfo := range splitted {
+			lines := strings.Split(packageInfo, "\n")
+			if strings.Contains(lines[0], "Package") {
+				autoInstalledPackage := lines[0][len("Package: "):]
+				autoInstalledPackages = append(autoInstalledPackages, autoInstalledPackage)
+				// TODO: check value of AutoInstalled
+
+			}
+
+		}
+		return autoInstalledPackages
+	}
+	return nil
 }
 
 // parseDpkgStatus is a parser function for Debian DB status contents, returning all Debian packages listed.
