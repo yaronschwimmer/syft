@@ -23,6 +23,7 @@ type DpkgMetadata struct {
 	Maintainer    string           `mapstructure:"Maintainer" json:"maintainer"`
 	InstalledSize int              `mapstructure:"InstalledSize" json:"installedSize" cyclonedx:"installedSize"`
 	Description   string           `mapstructure:"Description" hash:"ignore" json:"-"`
+	Dependencies  []string         `json:"dependencies"`
 	Files         []DpkgFileRecord `json:"files"`
 }
 

@@ -31,11 +31,34 @@ func parseDpkgDB(resolver source.FileResolver, env *generic.Environment, reader 
 	}
 
 	var pkgs []pkg.Package
+	nameToPackage := make(map[string]pkg.Package)
 	for _, m := range metadata {
-		pkgs = append(pkgs, newDpkgPackage(m, reader.Location, resolver, env.LinuxRelease))
+		packageFromMeta := newDpkgPackage(m, reader.Location, resolver, env.LinuxRelease)
+		pkgs = append(pkgs, packageFromMeta)
+		nameToPackage[packageFromMeta.Name] = packageFromMeta
+	}
+	relationships := make([]artifact.Relationship, 0)
+	for _, m := range metadata {
+		to, ok := nameToPackage[m.Package]
+		if !ok {
+			continue
+		}
+		for _, dep := range m.Dependencies {
+			from, ok := nameToPackage[dep]
+			if !ok {
+				continue
+			}
+
+			relationship := artifact.Relationship{
+				From: from,
+				To:   to,
+				Type: artifact.DependencyOfRelationship,
+			}
+			relationships = append(relationships, relationship)
+		}
 	}
 
-	return pkgs, nil, nil
+	return pkgs, relationships, nil
 }
 
 // parseDpkgStatus is a parser function for Debian DB status contents, returning all Debian packages listed.
@@ -83,6 +106,10 @@ func parseDpkgStatusEntry(reader *bufio.Reader) (*pkg.DpkgMetadata, error) {
 		return nil, err
 	}
 
+	if deps, ok := dpkgFields["Depends"]; ok {
+		entry.Dependencies = parseDependencies(deps.(string))
+	}
+
 	sourceName, sourceVersion := extractSourceVersion(entry.Source)
 	if sourceVersion != "" {
 		entry.SourceVersion = sourceVersion
@@ -106,6 +133,19 @@ func parseDpkgStatusEntry(reader *bufio.Reader) (*pkg.DpkgMetadata, error) {
 	}
 
 	return &entry, retErr
+}
+
+func parseDependencies(deps string) []string {
+	res := make([]string, 0)
+	commaSplit := strings.Split(deps, ",")
+	for _, depElem := range commaSplit {
+		pipeSplit := strings.Split(depElem, "|")
+		for _, dep := range pipeSplit {
+			name := strings.Split(strings.TrimSpace(dep), " ")[0]
+			res = append(res, name)
+		}
+	}
+	return res
 }
 
 func extractAllFields(reader *bufio.Reader) (map[string]interface{}, error) {
