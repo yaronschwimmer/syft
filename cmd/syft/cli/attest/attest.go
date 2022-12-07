@@ -40,7 +40,7 @@ import (
 	"github.com/anchore/syft/syft"
 	"github.com/anchore/syft/syft/event"
 	"github.com/anchore/syft/syft/formats/cyclonedxjson"
-	"github.com/anchore/syft/syft/formats/spdx22json"
+	"github.com/anchore/syft/syft/formats/spdxjson"
 	"github.com/anchore/syft/syft/formats/syftjson"
 	"github.com/anchore/syft/syft/sbom"
 	"github.com/anchore/syft/syft/source"
@@ -49,7 +49,7 @@ import (
 var (
 	allowedAttestFormats = []sbom.FormatID{
 		syftjson.ID,
-		spdx22json.ID,
+		spdxjson.ID,
 		cyclonedxjson.ID,
 	}
 
@@ -124,7 +124,7 @@ func parseAttestationOutput(outputs []string) (format string) {
 }
 
 func parseImageSource(userInput string, app *config.Application) (s *source.Input, err error) {
-	si, err := source.ParseInput(userInput, app.Platform, false)
+	si, err := source.ParseInputWithName(userInput, app.Platform, false, app.Name)
 	if err != nil {
 		return nil, fmt.Errorf("could not generate source input for attest command: %w", err)
 	}
@@ -356,7 +356,7 @@ func uploadAttestation(app *config.Application, signedPayload []byte, digest nam
 
 func formatPredicateType(format sbom.Format) string {
 	switch format.ID() {
-	case spdx22json.ID:
+	case spdxjson.ID:
 		return in_toto.PredicateSPDX
 	case cyclonedxjson.ID:
 		return in_toto.PredicateCycloneDX

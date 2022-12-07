@@ -55,6 +55,7 @@ type Application struct {
 	Exclusions         []string           `yaml:"exclude" json:"exclude" mapstructure:"exclude"`
 	Attest             attest             `yaml:"attest" json:"attest" mapstructure:"attest"`
 	Platform           string             `yaml:"platform" json:"platform" mapstructure:"platform"`
+	Name               string             `yaml:"name" json:"name" mapstructure:"name"`
 }
 
 func (cfg Application) ToCatalogerConfig() cataloger.Config {
@@ -74,9 +75,11 @@ func (cfg *Application) LoadAllValues(v *viper.Viper, configPath string) error {
 
 	// check if user specified config; otherwise read all possible paths
 	if err := loadConfig(v, configPath); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Not Found; ignore this error
-			log.Debug("no config file found; proceeding with defaults")
+		var notFound *viper.ConfigFileNotFoundError
+		if errors.As(err, &notFound) {
+			log.Debugf("no config file found, using defaults")
+		} else {
+			return fmt.Errorf("unable to load config: %w", err)
 		}
 	}
 

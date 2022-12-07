@@ -3,7 +3,7 @@ VERSION=$(shell git describe --dirty --always --tags)
 TEMPDIR = ./.tmp
 
 # commands and versions
-LINTCMD = $(TEMPDIR)/golangci-lint run --tests=false --timeout=5m --config .golangci.yaml
+LINTCMD = $(TEMPDIR)/golangci-lint run --tests=false
 GOIMPORTS_CMD = $(TEMPDIR)/gosimports -local github.com/anchore
 RELEASE_CMD=$(TEMPDIR)/goreleaser release --rm-dist
 SNAPSHOT_CMD=$(RELEASE_CMD) --skip-publish --snapshot
@@ -13,7 +13,7 @@ GOLANGCILINT_VERSION = v1.50.1
 GOSIMPORTS_VERSION = v0.3.4
 BOUNCER_VERSION = v0.4.0
 CHRONICLE_VERSION = v0.4.2
-GORELEASER_VERSION = v1.12.3
+GORELEASER_VERSION = v1.13.1
 YAJSV_VERSION = v1.4.1
 COSIGN_VERSION = v1.13.1
 QUILL_VERSION = v0.2.0

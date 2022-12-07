@@ -92,11 +92,20 @@ func toOSComponent(distro *linux.Release) []cyclonedx.Component {
 			Name:        distro.ID,
 			Version:     distro.VersionID,
 			// TODO should we add a PURL?
-			CPE:                distro.CPEName,
+			CPE:                formatCPE(distro.CPEName),
 			ExternalReferences: eRefs,
 			Properties:         properties,
 		},
 	}
+}
+
+func formatCPE(cpeString string) string {
+	cpe, err := pkg.NewCPE(cpeString)
+	if err != nil {
+		log.Debugf("skipping invalid CPE: %s", cpeString)
+		return ""
+	}
+	return pkg.CPEString(cpe)
 }
 
 // NewBomDescriptor returns a new BomDescriptor tailored for the current time and "syft" tool details.
@@ -159,8 +168,12 @@ func toDependencies(relationships []artifact.Relationship) []cyclonedx.Dependenc
 }
 
 func toBomDescriptorComponent(srcMetadata source.Metadata) *cyclonedx.Component {
+	name := srcMetadata.Name
 	switch srcMetadata.Scheme {
 	case source.ImageScheme:
+		if name == "" {
+			name = srcMetadata.ImageMetadata.UserInput
+		}
 		bomRef, err := artifact.IDByHash(srcMetadata.ImageMetadata.ID)
 		if err != nil {
 			log.Warnf("unable to get fingerprint of image metadata=%s: %+v", srcMetadata.ImageMetadata.ID, err)
@@ -168,10 +181,13 @@ func toBomDescriptorComponent(srcMetadata source.Metadata) *cyclonedx.Component 
 		return &cyclonedx.Component{
 			BOMRef:  string(bomRef),
 			Type:    cyclonedx.ComponentTypeContainer,
-			Name:    srcMetadata.ImageMetadata.UserInput,
+			Name:    name,
 			Version: srcMetadata.ImageMetadata.ManifestDigest,
 		}
 	case source.DirectoryScheme, source.FileScheme:
+		if name == "" {
+			name = srcMetadata.Path
+		}
 		bomRef, err := artifact.IDByHash(srcMetadata.Path)
 		if err != nil {
 			log.Warnf("unable to get fingerprint of source metadata path=%s: %+v", srcMetadata.Path, err)
@@ -179,7 +195,7 @@ func toBomDescriptorComponent(srcMetadata source.Metadata) *cyclonedx.Component 
 		return &cyclonedx.Component{
 			BOMRef: string(bomRef),
 			Type:   cyclonedx.ComponentTypeFile,
-			Name:   srcMetadata.Path,
+			Name:   name,
 		}
 	}
 

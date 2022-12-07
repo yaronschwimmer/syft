@@ -32,7 +32,7 @@ require (
 	github.com/scylladb/go-set v1.0.3-0.20200225121959-cc7b2070d91e
 	github.com/sergi/go-diff v1.2.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/spdx/tools-golang v0.2.0
+	github.com/spdx/tools-golang v0.3.1-0.20221108182156-8a01147e6342
 	github.com/spf13/afero v1.8.2
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/pflag v1.0.5
@@ -52,7 +52,7 @@ require (
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/anchore/go-logger v0.0.0-20220728155337-03b66a5207d8
-	github.com/anchore/stereoscope v0.0.0-20221006201143-d24c9d626b33
+	github.com/anchore/stereoscope v0.0.0-20221130153459-3b80d983223f
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/google/go-containerregistry v0.11.0
 	github.com/in-toto/in-toto-golang v0.4.1-0.20221018183522-731d0640b65f

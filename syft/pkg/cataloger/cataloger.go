@@ -12,6 +12,7 @@ import (
 	"github.com/anchore/syft/syft/pkg"
 	"github.com/anchore/syft/syft/pkg/cataloger/alpm"
 	"github.com/anchore/syft/syft/pkg/cataloger/apkdb"
+	"github.com/anchore/syft/syft/pkg/cataloger/binary"
 	"github.com/anchore/syft/syft/pkg/cataloger/cpp"
 	"github.com/anchore/syft/syft/pkg/cataloger/dart"
 	"github.com/anchore/syft/syft/pkg/cataloger/deb"
@@ -26,6 +27,7 @@ import (
 	"github.com/anchore/syft/syft/pkg/cataloger/rpm"
 	"github.com/anchore/syft/syft/pkg/cataloger/ruby"
 	"github.com/anchore/syft/syft/pkg/cataloger/rust"
+	"github.com/anchore/syft/syft/pkg/cataloger/sbom"
 	"github.com/anchore/syft/syft/pkg/cataloger/swift"
 )
 
@@ -39,7 +41,6 @@ func ImageCatalogers(cfg Config) []pkg.Cataloger {
 		python.NewPythonPackageCataloger(),
 		php.NewPHPComposerInstalledCataloger(),
 		javascript.NewJavascriptPackageCataloger(),
-		javascript.NewNodeBinaryCataloger(),
 		deb.NewDpkgdbCataloger(),
 		rpm.NewRpmDBCataloger(),
 		java.NewJavaCataloger(cfg.Java()),
@@ -47,6 +48,8 @@ func ImageCatalogers(cfg Config) []pkg.Cataloger {
 		golang.NewGoModuleBinaryCataloger(),
 		dotnet.NewDotnetDepsCataloger(),
 		portage.NewPortageCataloger(),
+		sbom.NewSBOMCataloger(),
+		binary.NewCataloger(),
 	}, cfg.Catalogers)
 }
 
@@ -59,7 +62,6 @@ func DirectoryCatalogers(cfg Config) []pkg.Cataloger {
 		python.NewPythonPackageCataloger(),
 		php.NewPHPComposerLockCataloger(),
 		javascript.NewJavascriptLockCataloger(),
-		javascript.NewNodeBinaryCataloger(),
 		deb.NewDpkgdbCataloger(),
 		rpm.NewRpmDBCataloger(),
 		rpm.NewFileCataloger(),
@@ -75,6 +77,8 @@ func DirectoryCatalogers(cfg Config) []pkg.Cataloger {
 		cpp.NewConanCataloger(),
 		portage.NewPortageCataloger(),
 		haskell.NewHackageCataloger(),
+		sbom.NewSBOMCataloger(),
+		binary.NewCataloger(),
 	}, cfg.Catalogers)
 }
 
@@ -88,7 +92,6 @@ func AllCatalogers(cfg Config) []pkg.Cataloger {
 		python.NewPythonPackageCataloger(),
 		javascript.NewJavascriptLockCataloger(),
 		javascript.NewJavascriptPackageCataloger(),
-		javascript.NewNodeBinaryCataloger(),
 		deb.NewDpkgdbCataloger(),
 		rpm.NewRpmDBCataloger(),
 		rpm.NewFileCataloger(),
@@ -107,6 +110,8 @@ func AllCatalogers(cfg Config) []pkg.Cataloger {
 		cpp.NewConanCataloger(),
 		portage.NewPortageCataloger(),
 		haskell.NewHackageCataloger(),
+		sbom.NewSBOMCataloger(),
+		binary.NewCataloger(),
 	}, cfg.Catalogers)
 }
 
